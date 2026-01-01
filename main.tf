@@ -2,7 +2,7 @@ terraform {
   required_providers {
     yandex = {
       source  = "yandex-cloud/yandex"
-      version = "~> 0.120"
+      version = "~> 0.177.0"
     }
   }
 
@@ -10,12 +10,29 @@ terraform {
 }
 
 provider "yandex" {
-    service_account_key_file = "key.json"
-  cloud_id  = "b1gii3452auiela08s8k"
-  folder_id = "b1gdnf54t05a11qn56sa"
-  zone      = "ru-central1-a"
+    service_account_key_file = var.sa_key_path
+  cloud_id  = var.cloud_id
+  folder_id = var.folder_id
+  zone      = var.zone
 }
 
-#resource "yandex_vpc_network" "test-vpc" {
- # name = "test-vpc"
-#}
+module "vpc" {
+  source = "./modules/vpc"
+}
+
+module "compute" {
+  source = "./modules/compute"
+  vpc_id = module.vpc.network_id
+  zone   = var.zone
+}
+module "load_balancer" {
+  source = "./modules/load_balancer"
+  web_server_ips = [
+    module.compute.web_server1_ip,
+    module.compute.web_server2_ip
+  ]
+  vpc_id    = module.vpc.network_id
+  folder_id = var.folder_id
+  zone      = var.zone
+}
+
