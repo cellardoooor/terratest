@@ -10,29 +10,28 @@ terraform {
 }
 
 provider "yandex" {
-    service_account_key_file = var.sa_key_path
-  cloud_id  = var.cloud_id
-  folder_id = var.folder_id
-  zone      = var.zone
+  service_account_key_file = var.sa_key_path
+  cloud_id                 = var.cloud_id
+  folder_id                = var.folder_id
+  zone                     = var.zone
 }
 
 module "vpc" {
   source = "./modules/vpc"
+  zone   = var.zone
 }
 
 module "compute" {
-  source = "./modules/compute"
-  vpc_id = module.vpc.network_id
-  zone   = var.zone
+  source    = "./modules/compute"
+  zone      = var.zone
+  subnet_id = module.vpc.subnet_id
 }
+
 module "load_balancer" {
-  source = "./modules/load_balancer"
+  source    = "./modules/load_balancer"
+  subnet_id = module.vpc.subnet_id
   web_server_ips = [
     module.compute.web_server1_ip,
     module.compute.web_server2_ip
   ]
-  vpc_id    = module.vpc.network_id
-  folder_id = var.folder_id
-  zone      = var.zone
 }
-

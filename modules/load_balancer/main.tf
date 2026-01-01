@@ -1,52 +1,43 @@
 terraform {
   required_providers {
     yandex = {
-      source = "yandex-cloud/yandex"
+      source  = "yandex-cloud/yandex"
+      version = "~> 0.177.0"
     }
   }
-}
-
-variable "vpc_id" {
-  description = "VPC/network id"
-  type        = string
-}
-
-variable "folder_id" {
-  description = "Folder id"
-  type        = string
-}
-
-variable "zone" {
-  description = "Availability zone"
-  type        = string
-}
-variable "web_server_ips" {
-  description = "IPs of web servers"
-  type        = list(string)
 }
 resource "yandex_lb_network_load_balancer" "lb" {
-  name      = "test-lb"
-  folder_id = var.folder_id
-  zone      = var.zone
-  network_id = var.vpc_id
+  name = "web-nlb"
 
   listener {
-    port = 80
-    external_address = true
+    name        = "http-listener"
+    port        = 80
+    target_port = 80
   }
 
-  backend_group {
-    backend {
-      address = var.web_server_ips[0]
-      port    = 80
-    }
-    backend {
-      address = var.web_server_ips[1]
-      port    = 80
+  attached_target_group {
+    target_group_id = yandex_lb_target_group.tg.id
+
+    healthcheck {
+      name = "http"
+      http_options {
+        port = 80
+        path = "/"
+      }
     }
   }
 }
 
-output "lb_ip" {
-  value = yandex_lb_network_load_balancer.lb.listener[0].external_address
+resource "yandex_lb_target_group" "tg" {
+  name = "web-target-group"
+
+  target {
+    subnet_id = var.subnet_id
+    address   = var.web_server_ips[0]
+  }
+
+  target {
+    subnet_id = var.subnet_id
+    address   = var.web_server_ips[1]
+  }
 }
