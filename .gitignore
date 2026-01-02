@@ -1,3 +1,9 @@
 key.json
 *.tfvars
 .env
+**/.terraform/*
+*.tfstate*
+*tfvars.json
+.terraformrc
+*.log
+.terraform.lock.hcl
