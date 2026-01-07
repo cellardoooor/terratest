@@ -62,11 +62,5 @@ module "load_balancer" {
 
   # Балансер должен быть в той же подсети
   subnet_id = module.vpc.subnet_id
-
-  # Backend'ы балансера —
-  # это ВНУТРЕННИЕ IP виртуальных машин
-  #
-  # module.vm.internal_ips —
-  # output из модуля vm
   targets = module.vm.internal_ips
 }
