@@ -5,39 +5,42 @@ terraform {
       version = "~> 0.177.0"
     }
   }
+
+  required_version = ">= 1.3.0"
 }
-resource "yandex_lb_network_load_balancer" "lb" {
-  name = "web-nlb"
+
+# Балансер нагрузки
+resource "yandex_lb_network_load_balancer" "this" {
+  name = "dev-lb"
 
   listener {
-    name        = "http-listener"
-    port        = 80
-    target_port = 80
+    name = "http"
+    port = 80
+
+    external_address_spec {
+      ip_version = "ipv4"
+    }
   }
 
   attached_target_group {
-    target_group_id = yandex_lb_target_group.tg.id
+    target_group_id = yandex_lb_target_group.this.id
 
     healthcheck {
       name = "http"
       http_options {
         port = 80
-        path = "/"
       }
     }
   }
 }
 
-resource "yandex_lb_target_group" "tg" {
-  name = "web-target-group"
-
-  target {
-    subnet_id = var.subnet_id
-    address   = var.web_server_ips[0]
-  }
-
-  target {
-    subnet_id = var.subnet_id
-    address   = var.web_server_ips[1]
+# Группа таргетов (ВМ)
+resource "yandex_lb_target_group" "this" {
+  dynamic "target" {
+    for_each = var.targets
+    content {
+      subnet_id = var.subnet_id
+      address   = target.value
+    }
   }
 }

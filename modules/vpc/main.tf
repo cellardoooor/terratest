@@ -5,14 +5,19 @@ terraform {
       version = "~> 0.177.0"
     }
   }
-}
-resource "yandex_vpc_network" "main" {
-  name = "test-network"
+
+  required_version = ">= 1.3.0"
 }
 
-resource "yandex_vpc_subnet" "subnet" {
-  name           = "test-subnet"
+# Создаём VPC сеть
+resource "yandex_vpc_network" "this" {
+  name = "dev-network"
+}
+
+# Создаём подсеть внутри сети
+resource "yandex_vpc_subnet" "this" {
+  name           = "dev-subnet"
   zone           = var.zone
-  network_id     = yandex_vpc_network.main.id
-  v4_cidr_blocks = ["10.0.0.0/24"]
+  network_id     = yandex_vpc_network.this.id
+  v4_cidr_blocks = [var.cidr]
 }

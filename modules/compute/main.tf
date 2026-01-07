@@ -5,17 +5,25 @@ terraform {
       version = "~> 0.177.0"
     }
   }
+
+  required_version = ">= 1.3.0"
 }
 
+# Получаем актуальный образ Ubuntu
+data "yandex_compute_image" "ubuntu" {
+  family = "ubuntu-2204-lts"
+}
 
-resource "yandex_compute_instance" "web_server1" {
-  name        = "web-server1"
-  zone        = var.zone
-  platform_id = "standard-v2"
+# Создаём несколько ВМ
+resource "yandex_compute_instance" "this" {
+  count = var.vm_count
+
+  name = "web-${count.index}"
+  zone = var.zone
 
   resources {
-    cores  = 1
-    memory = 1
+    cores  = var.cores
+    memory = var.memory
   }
 
   boot_disk {
@@ -24,30 +32,9 @@ resource "yandex_compute_instance" "web_server1" {
     }
   }
 
+  # Сетевой интерфейс
   network_interface {
     subnet_id = var.subnet_id
-    nat       = true
-  }
-}
-
-resource "yandex_compute_instance" "web_server2" {
-  name        = "web-server2"
-  zone        = var.zone
-  platform_id = "standard-v2"
-
-  resources {
-    cores  = 1
-    memory = 1
-  }
-
-  boot_disk {
-    initialize_params {
-      image_id = data.yandex_compute_image.ubuntu.id
-    }
-  }
-
-  network_interface {
-    subnet_id = var.subnet_id
-    nat       = true
+    nat       = true   # публичный IP
   }
 }

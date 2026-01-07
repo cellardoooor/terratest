@@ -3,5 +3,19 @@ variable "zone" {
 }
 
 variable "subnet_id" {
-  type = string
+  description = "Subnet where VM will be placed"
+  type        = string
+}
+
+variable "vm_count" {
+  description = "Number of virtual machines"
+  type        = number
+}
+
+variable "cores" {
+  type = number
+}
+
+variable "memory" {
+  type = number
 }
