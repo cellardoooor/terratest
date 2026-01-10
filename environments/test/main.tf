@@ -44,11 +44,11 @@ module "compute" {
   # это output из модуля network
   subnet_id = module.vpc.subnet_id
 
-  vm_count = 2
+  vm_count = 1
 
   # Ресурсы ВМ
-  cores  = 2
-  memory = 2
+  cores  = 1
+  memory = 1
 }
 
 
