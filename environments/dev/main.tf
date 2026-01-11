@@ -47,8 +47,8 @@ module "compute" {
   vm_count = 2
 
   # Ресурсы ВМ
-  cores  = 3
-  memory = 3
+  cores  = 2
+  memory = 2
 }
 
 
