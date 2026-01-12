@@ -5,13 +5,11 @@ terraform {
       version = "~> 0.177.0"
     }
   }
-
-  required_version = ">= 1.3.0"
 }
 
 # Балансер нагрузки
 resource "yandex_lb_network_load_balancer" "this" {
-  name = "dev-lb"
+  name = var.name
 
   listener {
     name = "http"
@@ -23,7 +21,7 @@ resource "yandex_lb_network_load_balancer" "this" {
   }
 
   attached_target_group {
-    target_group_id = yandex_lb_target_group.this.id
+    target_group_id = yandex_lb_target_group.this.id  # ← ССЫЛКА
 
     healthcheck {
       name = "http"
@@ -34,8 +32,9 @@ resource "yandex_lb_network_load_balancer" "this" {
   }
 }
 
-# Группа таргетов (ВМ)
 resource "yandex_lb_target_group" "this" {
+  name = "${var.name}-targets"
+
   dynamic "target" {
     for_each = var.targets
     content {

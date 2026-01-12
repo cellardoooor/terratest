@@ -42,9 +42,7 @@ module "compute" {
 module "load_balancer" {
   source = "../../modules/load_balancer"
   
+  name = "dev-lb"
   subnet_id = module.vpc.subnet_id
   targets   = module.compute.internal_ips
-  
-  # Балансировщик получает СВОЮ security group
-  security_group_ids = [module.vpc.load_balancer_security_group_id]
 }

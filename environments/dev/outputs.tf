@@ -1,13 +1,11 @@
-output "vpc_id" {
-  value       = module.vpc.network_id
-  description = "ID of created VPC"
+output "load_balancer_external_ip" {
+  value = module.load_balancer.external_ip
 }
 
-output "subnet_id" {
-  value       = module.vpc.subnet_id
-  description = "ID of created Subnet"
+output "vm_internal_ips" {
+  value = module.compute.internal_ips
 }
 
-output "load_balancer_ip" {
-  value = module.load_balancer.lb_ip
+output "vpc_network_id" {
+  value = module.vpc.network_id
 }
