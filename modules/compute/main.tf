@@ -18,8 +18,12 @@ data "yandex_compute_image" "ubuntu" {
 resource "yandex_compute_instance" "this" {
   count = var.vm_count
 
-  name = "web-${count.index}"
+  name = "${var.env}-web-${count.index}"
   zone = var.zone
+  
+metadata = {
+  ssh-keys = var.ssh_public_key
+}
 
   resources {
     cores  = var.cores

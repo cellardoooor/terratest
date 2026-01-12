@@ -45,11 +45,11 @@ variable "assign_public_ip" {
   default     = false
 }
 
-variable "public_key_path" {
-  description = "Path to SSH public key"
-  type        = string
-  default     = "~/.ssh/id_rsa.pub"
+variable "ssh_public_key" {
+  type      = string
+  sensitive = true
 }
+
 
 variable "labels" {
   description = "Labels for VMs"
