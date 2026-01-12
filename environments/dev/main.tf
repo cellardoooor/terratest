@@ -16,49 +16,35 @@ provider "yandex" {
   zone                     = var.zone
 }
 
-
 module "vpc" {
-
-  # Локальный путь до модуля
   source = "../../modules/vpc"
-
-  # Передаём зону в модуль
+  
   zone = var.zone
-
-  # CIDR блок для подсети
-  # В DEV обычно маленький диапазон
   cidr = "10.10.0.0/24"
+  
+  network_name = "dev-lb-network"
 }
-
 
 module "compute" {
-
-  # Путь до модуля VM
   source = "../../modules/compute"
-
-  # Зона размещения ВМ
-  zone = var.zone
-
-  # Подсеть, в которой будут ВМ
-  # module.network.subnet_id —
-  # это output из модуля network
+  
+  zone      = var.zone
   subnet_id = module.vpc.subnet_id
-
+  
+  # VM получают ТОЛЬКО security group для инстансов
+  security_group_ids = [module.vpc.vm_security_group_id]
+  
   vm_count = 2
-
-  # Ресурсы ВМ
-  cores  = 2
-  memory = 2
+  cores    = 2
+  memory   = 2
 }
 
-
-
 module "load_balancer" {
-
-  # Путь до модуля балансера
   source = "../../modules/load_balancer"
-
-  # Балансер должен быть в той же подсети
+  
   subnet_id = module.vpc.subnet_id
-  targets = module.compute.internal_ips
+  targets   = module.compute.internal_ips
+  
+  # Балансировщик получает СВОЮ security group
+  security_group_ids = [module.vpc.load_balancer_security_group_id]
 }

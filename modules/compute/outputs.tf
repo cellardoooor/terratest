@@ -1,7 +1,19 @@
-# Внутренние IP ВМ — для балансера
+output "ids" {
+  description = "VM IDs"
+  value       = yandex_compute_instance.this[*].id
+}
+
+output "names" {
+  description = "VM names"
+  value       = yandex_compute_instance.this[*].name
+}
+
 output "internal_ips" {
-  value = [
-    for vm in yandex_compute_instance.this :
-    vm.network_interface[0].ip_address
-  ]
+  description = "Internal IP addresses"
+  value       = yandex_compute_instance.this[*].network_interface.0.ip_address
+}
+
+output "external_ips" {
+  description = "External IP addresses (if NAT enabled)"
+  value       = var.assign_public_ip ? yandex_compute_instance.this[*].network_interface.0.nat_ip_address : []
 }

@@ -5,8 +5,6 @@ terraform {
       version = "~> 0.177.0"
     }
   }
-
-  required_version = ">= 1.3.0"
 }
 
 # Получаем актуальный образ Ubuntu
@@ -29,12 +27,33 @@ resource "yandex_compute_instance" "this" {
   boot_disk {
     initialize_params {
       image_id = data.yandex_compute_image.ubuntu.id
+      size     = var.disk_size
     }
   }
 
-  # Сетевой интерфейс
+  # Сетевой интерфейс с security groups
   network_interface {
-    subnet_id = var.subnet_id
-    nat       = true   # публичный IP
+    subnet_id          = var.subnet_id
+    nat                = var.assign_public_ip
+    security_group_ids = var.security_group_ids
+  }
+
+  metadata = {
+    ssh-keys = "ubuntu:${file(var.public_key_path)}"
+  }
+
+  labels = var.labels
+}
+
+# Cloud-init для автоматической настройки
+data "template_cloudinit_config" "config" {
+  count = var.user_data != "" ? var.vm_count : 0
+
+  gzip          = false
+  base64_encode = false
+
+  part {
+    content_type = "text/cloud-config"
+    content      = var.user_data
   }
 }
