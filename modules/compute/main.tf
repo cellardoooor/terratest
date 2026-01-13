@@ -18,8 +18,12 @@ data "yandex_compute_image" "ubuntu" {
 resource "yandex_compute_instance" "this" {
   count = var.vm_count
 
-  name = "web-${count.index}"
+  name = "${var.env}-web-${count.index}"
   zone = var.zone
+  
+metadata = {
+  ssh-keys = var.ssh_public_key
+}
 
   resources {
     cores  = var.cores
@@ -29,12 +33,17 @@ resource "yandex_compute_instance" "this" {
   boot_disk {
     initialize_params {
       image_id = data.yandex_compute_image.ubuntu.id
+      size     = var.disk_size
     }
   }
 
-  # Сетевой интерфейс
+  # Сетевой интерфейс с security groups
   network_interface {
-    subnet_id = var.subnet_id
-    nat       = true   # публичный IP
+    subnet_id          = var.subnet_id
+    nat                = var.assign_public_ip
+    security_group_ids = var.security_group_ids
   }
+
+  labels = var.labels
 }
+
