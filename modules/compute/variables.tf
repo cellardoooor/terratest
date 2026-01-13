@@ -36,7 +36,7 @@ variable "memory" {
 variable "disk_size" {
   description = "Boot disk size in GB"
   type        = number
-  default     = 2
+  default     = 8
 }
 
 variable "assign_public_ip" {
@@ -48,6 +48,7 @@ variable "assign_public_ip" {
 variable "ssh_public_key" {
   type      = string
   sensitive = true
+  default = ""
 }
 
 

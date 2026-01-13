@@ -30,6 +30,9 @@ resource "yandex_lb_network_load_balancer" "this" {
       }
     }
   }
+  #lifecycle {
+  #  prevent_destroy = true
+  #}
 }
 
 resource "yandex_lb_target_group" "this" {
