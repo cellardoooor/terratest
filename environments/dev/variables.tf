@@ -20,7 +20,7 @@ variable "allow_ssh_cidrs" {
   description = "CIDR blocks allowed to SSH (empty for no restrictions in dev)"
   type        = list(string)
   default     = []
-  
+
   # Для безопасности можно указать:
   # default = ["YOUR_OFFICE_IP/32"]
 }

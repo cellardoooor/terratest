@@ -32,7 +32,7 @@ module "compute" {
   subnet_id = module.vpc.subnet_id
   
   # VM получают ТОЛЬКО security group для инстансов
-  security_group_ids = [module.vpc.vm_security_group_id]
+  security_group_ids = [module.security.vm_security_group_id]
   
   vm_count = 2
   cores    = 2
@@ -42,7 +42,18 @@ module "compute" {
 module "load_balancer" {
   source = "../../modules/load_balancer"
   
-  name = "dev-lb"
+  name      = "dev-lb"
   subnet_id = module.vpc.subnet_id
   targets   = module.compute.internal_ips
+}
+
+module "security" {
+  source = "../../modules/security"
+  
+  # Передаём то что нужно security модулю
+  network_id = module.vpc.network_id
+  cidr       = "10.10.0.0/24"
+  
+  # Опционально: список IP для SSH
+  allow_ssh_cidrs = var.allow_ssh_cidrs
 }
