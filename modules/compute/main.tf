@@ -18,7 +18,7 @@ data "yandex_compute_image" "ubuntu" {
 resource "yandex_compute_instance" "this" {
   count = var.vm_count
 
-  name = "${var.env}-web-${count.index}"
+  name = "web-${count.index}"
   zone = var.zone
   
 metadata = {
