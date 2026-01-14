@@ -18,61 +18,47 @@ provider "yandex" {
 
 module "vpc" {
   source = "../../modules/vpc"
-  
+
   zone = var.zone
   cidr = "10.10.0.0/24"
-  
-  network_name = "dev-lb-network"
-}
 
-module "compute" {
-  source = "../../modules/compute"
-  
-  zone      = var.zone
-  subnet_id = module.vpc.subnet_id
-  
-  # VM получают ТОЛЬКО security group для инстансов
-  security_group_ids = [module.security.vm_security_group_id]
-  
-  vm_count = 2
-  cores    = 2
-  memory   = 2
+  network_name = "dev-lb-network"
 }
 
 module "load_balancer" {
   source = "../../modules/load_balancer"
-  
+
   name      = "dev-lb"
   subnet_id = module.vpc.subnet_id
-  targets   = module.instance_group.instance_group_id
+  targets   = module.instance_group.instance_ips
 }
 
 module "security" {
   source = "../../modules/security"
-  
+
   # Передаём то что нужно security модулю
   network_id = module.vpc.network_id
   cidr       = "10.10.0.0/24"
-  
+
   # Опционально: список IP для SSH
   allow_ssh_cidrs = var.allow_ssh_cidrs
 }
 
 module "instance_group" {
   source = "../../modules/instance_group"
-  
-  name        = "web-group"
-  size        = 2  # вместо vm_count
-  zones       = [var.zone]
-  subnet_ids  = [module.vpc.subnet_id]
-  network_id  = module.vpc.network_id
+
+  name               = "web-group"
+  size               = 2 # вместо vm_count
+  zones              = [var.zone]
+  subnet_ids         = [module.vpc.subnet_id]
+  network_id         = module.vpc.network_id
   security_group_ids = [module.security.vm_security_group_id]
   service_account_id = var.service_account_id
-  
-  cores    = 2
-  memory   = 2
+
+  cores     = 2
+  memory    = 2
   disk_size = 10
-  
+
   target_group_name = "web-targets"
   health_check_path = "/healthz"
 }

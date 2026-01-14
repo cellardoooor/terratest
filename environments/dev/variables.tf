@@ -34,5 +34,5 @@ variable "dev_subnet_cidr" {
 variable "service_account_id" {
   description = "Service account ID for instance group"
   type        = string
-  default     = ""  # или null если поддерживается
+  default     = "" # или null если поддерживается
 }

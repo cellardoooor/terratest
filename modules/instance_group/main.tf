@@ -45,11 +45,34 @@ resource "yandex_compute_instance_group" "this" {
   }
   
   scale_policy {
-    fixed_scale {
-      size = var.size  # количество инстансов в группе
-    }
+    auto_scale {
+      # Базовое количество инстансов (всегда запущено)
+      initial_size = var.initial_size
+      
+      # Максимальное количество инстансов
+      max_size = var.max_size
+      
+      # Минимальное количество инстансов
+      #min_size = var.min_size
+      
+      # Время стабилизации в секундах (когда скейлинг заканчивается)
+      measurement_duration = 60
+      
+      # Как часто проверять метрики (секунды)
+      warmup_duration = 60
+      
+      # Время "остывания" перед следующим скейлингом (секунды)
+      stabilization_duration = 120
+      
+      custom_rule {
+        rule_type   = "UTILIZATION"
+        metric_type = "GAUGE"
+        metric_name = "cpu_usage"
+        target      = var.cpu_utilization_target
+      }
   }
-  
+  }
+
   allocation_policy {
     zones = var.zones
   }
