@@ -9,3 +9,7 @@ output "vm_internal_ips" {
 output "vpc_network_id" {
   value = module.vpc.network_id
 }
+
+output "instance_group_id" {
+  value = module.instance_group.instance_group_id
+}

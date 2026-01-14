@@ -30,3 +30,9 @@ variable "dev_subnet_cidr" {
   description = "CIDR for dev subnet"
   type        = string
 }
+
+variable "service_account_id" {
+  description = "Service account ID for instance group"
+  type        = string
+  default     = ""  # или null если поддерживается
+}

@@ -44,7 +44,7 @@ module "load_balancer" {
   
   name      = "dev-lb"
   subnet_id = module.vpc.subnet_id
-  targets   = module.compute.internal_ips
+  targets   = module.instance_group.instance_group_id
 }
 
 module "security" {
@@ -56,4 +56,23 @@ module "security" {
   
   # Опционально: список IP для SSH
   allow_ssh_cidrs = var.allow_ssh_cidrs
+}
+
+module "instance_group" {
+  source = "../../modules/instance_group"
+  
+  name        = "web-group"
+  size        = 2  # вместо vm_count
+  zones       = [var.zone]
+  subnet_ids  = [module.vpc.subnet_id]
+  network_id  = module.vpc.network_id
+  security_group_ids = [module.security.vm_security_group_id]
+  service_account_id = var.service_account_id
+  
+  cores    = 2
+  memory   = 2
+  disk_size = 10
+  
+  target_group_name = "web-targets"
+  health_check_path = "/healthz"
 }
