@@ -20,7 +20,6 @@ output "instance_ips" {
 }
 
 output "instance_group_id" {
-  description = "Target group ID for load balancer"
   value       = yandex_lb_target_group.this.id
 }
 

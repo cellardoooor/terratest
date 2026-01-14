@@ -85,3 +85,25 @@ variable "health_check_path" {
   type        = string
   default     = "/"
 }
+# Параметры автоскейлинга
+variable "initial_size" {
+  description = "Initial number of instances in the group"
+  type        = number
+  default     = 2
+}
+
+variable "max_size" {
+  description = "Maximum number of instances"
+  type        = number
+  default     = 5
+}
+
+variable "cpu_utilization_target" {
+  description = "Target CPU utilization percentage for scaling"
+  type        = number
+  default     = 80
+  validation {
+    condition     = var.cpu_utilization_target >= 10 && var.cpu_utilization_target <= 100
+    error_message = "CPU utilization target must be between 10 and 100 percent."
+  }
+}
