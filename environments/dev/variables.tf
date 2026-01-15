@@ -36,3 +36,7 @@ variable "service_account_id" {
   type        = string
   default     = "" # или null если поддерживается
 }
+
+variable "cidr" {
+  type = string
+}
