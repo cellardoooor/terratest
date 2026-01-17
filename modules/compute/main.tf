@@ -20,6 +20,7 @@ resource "yandex_compute_instance" "this" {
 
   name = "web-${count.index}"
   zone = var.zone
+
   
 metadata = {
   ssh-keys = var.ssh_public_key
