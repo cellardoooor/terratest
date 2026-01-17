@@ -1,0 +1,30 @@
+name: Sync to GitLab
+
+on:
+  push:
+    branches: [ main, develop, feature/*, ft/* ]
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          
+      - name: Configure Git
+        run: |
+          git config --global user.name "CellarDoooor GitHub Actions"
+          git config --global user.email "eksik3@gmail.com"
+      
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.GITLAB_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan gitlab.com >> ~/.ssh/known_hosts
+          
+      - name: Add GitLab remote and push
+        run: |
+          git remote add gitlab git@gitlab.com:cellardoooor/terratest.git
+          git push gitlab ${{ github.ref }}:refs/heads/${{ github.ref_name }}
