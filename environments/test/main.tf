@@ -57,12 +57,13 @@ module "compute" {
       runcmd:
         - apt-get install -y ansible git
         - ansible-pull \
-            -U https://github.com/you/platform-ansible.git \
+            -U https://github.com/cellardoooor/ansible_test \
             -i localhost, \
             playbook.yml
     EOF
   }
 }
+
 
 
 
