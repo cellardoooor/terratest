@@ -27,7 +27,7 @@ module "vpc" {
 
   # CIDR блок для подсети
   # В DEV обычно маленький диапазон
-  cidr = "10.10.0.0/24"
+  cidr = var.dev_subnet_cidr
 }
 
 
@@ -47,18 +47,22 @@ module "compute" {
   vm_count = 1
 
   # Ресурсы ВМ
-  cores  = 1
-  memory = 1
+  cores  = 2
+  memory = 2
+   metadata = {
+    user-data = <<-EOF
+      #cloud-config
+      package_update: true
+
+      runcmd:
+        - apt-get install -y ansible git
+        - ansible-pull \
+            -U https://github.com/you/platform-ansible.git \
+            -i localhost, \
+            playbook.yml
+    EOF
+  }
 }
 
 
 
-module "load_balancer" {
-
-  # Путь до модуля балансера
-  source = "../../modules/load_balancer"
-
-  # Балансер должен быть в той же подсети
-  subnet_id = module.vpc.subnet_id
-  targets = module.compute.internal_ips
-}
