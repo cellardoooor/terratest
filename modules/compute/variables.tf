@@ -63,3 +63,8 @@ variable "user_data" {
   type        = string
   default     = ""
 }
+variable "metadata" {
+  description = "Metadata for compute instances (cloud-init, ssh, etc)"
+  type        = map(string)
+  default     = {}
+}

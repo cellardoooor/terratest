@@ -1,0 +1,48 @@
+name: Sync to GitLab
+
+on:
+  push:
+    branches: [ main, develop, 'feature/*', 'ft/*' ]
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.GITLAB_SSH_PRIVATE_KEY }}" > ~/.ssh/key
+          chmod 600 ~/.ssh/key
+          
+          # Настройка SSH
+          cat >> ~/.ssh/config << 'EOF'
+          Host gitlab.com
+            HostName gitlab.com
+            User git
+            IdentityFile ~/.ssh/key
+            StrictHostKeyChecking no
+          EOF
+          
+      - name: Sync to GitLab
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          
+          # Добавляем remote
+          git remote add gitlab git@gitlab.com:cellardoooor/terratest.git || true
+          
+          # Получаем имя текущей ветки
+          CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+          echo "Syncing branch: $CURRENT_BRANCH"
+          
+          # Пушим только эту ветку
+          git push gitlab HEAD:$CURRENT_BRANCH --force-with-lease
+          
+          # Если нужно синхронизировать все ветки (опционально)
+          # echo "Syncing all branches..."
+          # git push gitlab --all --force-with-lease
+          # git push gitlab --tags --force-with-lease
