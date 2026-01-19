@@ -26,7 +26,7 @@ variable "allow_ssh_cidrs" {
 }
 
 # Опционально: переопределение подсети для dev
-variable "dev_subnet_cidr" {
+variable "cidr" {
   description = "CIDR for dev subnet"
   type        = string
 }
@@ -37,10 +37,6 @@ variable "service_account_id" {
   default     = "" # или null если поддерживается
 }
 
-variable "ssh_public_key_path" {
-  type        = string
-  description = "Path to SSH public key" 
-}
 variable "metadata" {
   description = "Metadata for compute instances (cloud-init, ssh, etc)"
   type        = map(string)
