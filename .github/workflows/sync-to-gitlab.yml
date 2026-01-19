@@ -1,16 +1,16 @@
-name: Mirror to GitLab
+name: Sync all branches to GitLab
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, ft/** ]  # Все ft/ ветки и main
 
 jobs:
-  mirror:
+  sync:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
         with:
-          fetch-depth: 0
+          fetch-depth: 0  # Все коммиты всех веток
           
       - name: Setup SSH
         run: |
@@ -26,10 +26,24 @@ jobs:
             StrictHostKeyChecking no
           EOF
           
-      - name: Mirror push
+      - name: Sync all branches to GitLab
         run: |
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
           
-          # Просто зеркалируем - перезаписываем всё
-          git push --mirror git@gitlab.com:cellardoooor/terratest.git
+          # Добавляем remote GitLab
+          git remote add gitlab git@gitlab.com:cellardoooor/terratest.git || true
+          
+          # Получаем ВСЕ локальные ветки
+          echo "Available branches:"
+          git branch -a
+          
+          # Пушим ВСЕ локальные ветки
+          echo "Pushing all branches to GitLab..."
+          git push gitlab --all --force
+          
+          # Пушим теги
+          echo "Pushing tags..."
+          git push gitlab --tags --force
+          
+          echo "Sync completed!"
