@@ -52,9 +52,6 @@ resource "yandex_compute_instance_group" "this" {
       # Максимальное количество инстансов
       max_size = var.max_size
       
-      # Минимальное количество инстансов
-      #min_size = var.min_size
-      
       # Время стабилизации в секундах (когда скейлинг заканчивается)
       measurement_duration = 60
       

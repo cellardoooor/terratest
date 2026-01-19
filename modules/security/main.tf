@@ -84,3 +84,47 @@ resource "yandex_vpc_security_group" "vm" {
     port           = 53
   }
 }
+
+# security-groups.tf
+resource "yandex_vpc_security_group" "web_open" {
+  name        = "web-open-all"
+  description = "Open web ports for testing"
+  network_id  = var.network_id
+
+  # Входящие правила (ingress)
+  ingress {
+    protocol       = "TCP"
+    description    = "HTTP"
+    v4_cidr_blocks = ["0.0.0.0/0"]
+    port           = 80
+  }
+
+  ingress {
+    protocol       = "TCP"
+    description    = "HTTPS"
+    v4_cidr_blocks = ["0.0.0.0/0"]
+    port           = 443
+  }
+
+  ingress {
+    protocol       = "TCP"
+    description    = "HTTP Alternative"
+    v4_cidr_blocks = ["0.0.0.0/0"]
+    port           = 8080
+  }
+
+  # Исходящие правила (egress) - разрешаем всё
+  egress {
+    protocol       = "ANY"
+    description    = "Allow all outbound"
+    v4_cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  # Добавляем SSH для управления (опционально)
+  ingress {
+    protocol       = "TCP"
+    description    = "SSH"
+    v4_cidr_blocks = ["0.0.0.0/0"]
+    port           = 22
+  }
+}

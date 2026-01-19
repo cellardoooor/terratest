@@ -37,7 +37,6 @@ variable "service_account_id" {
   default     = "" # или null если поддерживается
 }
 
-variable "ssh_public_key_path" {
-  type        = string
-  description = "Path to SSH public key" 
+variable "cidr" {
+  type = string
 }

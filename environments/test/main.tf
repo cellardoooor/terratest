@@ -27,9 +27,14 @@ module "vpc" {
 
   # CIDR блок для подсети
   # В DEV обычно маленький диапазон
-  cidr = var.dev_subnet_cidr
+  cidr = var.cidr
 }
 
+module "security_groups" {
+  source     = "../../modules/security"
+  network_id = module.vpc.network_id
+  cidr       = var.cidr
+}
 
 module "compute" {
 
@@ -47,21 +52,25 @@ module "compute" {
   vm_count = 1
 
   # Ресурсы ВМ
-  cores  = 2
-  memory = 2
-   metadata = {
-    user-data = <<-EOF
-      #cloud-config
-      package_update: true
+  cores              = 2
+  memory             = 2
+  assign_public_ip   = true
+  security_group_ids = [module.security_groups.web_open_id]
+  metadata = {
+  user-data = <<-EOF
+    #cloud-config
+    package_update: true
 
-      runcmd:
-        - apt-get install -y ansible git
-        - ansible-pull \
-            -U https://github.com/cellardoooor/ansible_test \
-            -i localhost, \
-            playbook.yml
-    EOF
-  }
+    runcmd:
+      - echo "=== START ==="
+      - apt-get install -y ansible git
+      - cd /tmp
+      - git clone https://github.com/cellardoooor/ansible_test
+      - cd ansible_test
+      - ansible-playbook -i localhost, playbook.yml
+      - echo "=== DONE ==="
+  EOF
+}
 }
 
 

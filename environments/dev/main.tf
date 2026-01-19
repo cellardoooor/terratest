@@ -20,7 +20,7 @@ module "vpc" {
   source = "../../modules/vpc"
 
   zone = var.zone
-  cidr = "10.10.0.0/24"
+  cidr = var.cidr
 
   network_name = "dev-lb-network"
 }
@@ -38,7 +38,7 @@ module "security" {
 
   # Передаём то что нужно security модулю
   network_id = module.vpc.network_id
-  cidr       = "10.10.0.0/24"
+  cidr       = var.cidr
 
   # Опционально: список IP для SSH
   allow_ssh_cidrs = var.allow_ssh_cidrs

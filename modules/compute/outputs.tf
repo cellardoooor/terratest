@@ -10,7 +10,11 @@ output "internal_ips" {
 }
 
 output "external_ips" {
-  value = var.assign_public_ip ? yandex_compute_instance.this[*].network_interface.0.nat_ip_address : []
+  description = "External IP addresses of the instances"
+  value       = [for vm in yandex_compute_instance.this : vm.network_interface[0].nat_ip_address]
 }
 
-
+output "instances" {
+  description = "All instances data"
+  value       = yandex_compute_instance.this
+}
