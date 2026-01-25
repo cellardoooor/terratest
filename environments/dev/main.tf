@@ -31,6 +31,7 @@ module "load_balancer" {
   name      = "dev-lb"
   subnet_id = module.vpc.subnet_id
   targets   = module.instance_group.instance_ips
+  depends_on = [module.instance_group]
 }
 
 module "security" {
@@ -48,7 +49,6 @@ module "instance_group" {
   source = "../../modules/instance_group"
 
   name               = "web-group"
-  size               = 2 # вместо vm_count
   zones              = [var.zone]
   subnet_ids         = [module.vpc.subnet_id]
   network_id         = module.vpc.network_id
@@ -58,6 +58,14 @@ module "instance_group" {
   cores     = 2
   memory    = 2
   disk_size = 10
+
+  # SSH ключ (содержимое файла)
+  ssh_public_key = file(var.ssh_public_key_path)
+
+  # Автоскейлинг
+  initial_size          = 2
+  max_size              = 5
+  cpu_utilization_target = 80
 
   target_group_name = "web-targets"
   health_check_path = "/healthz"
