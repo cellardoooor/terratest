@@ -19,5 +19,13 @@ worker_count       = 3
 worker_cores       = 4
 worker_memory      = 16
 
+# Ingress (заполняется после terraform apply из output)
+public_subnet_id   = ""  # Получить из terraform output public_subnet_id
+
+# Kubernetes Provider (заполняется после terraform apply)
+k8s_endpoint       = ""  # Получить из terraform output cluster_endpoint
+k8s_ca_certificate = ""  # Получить из terraform output cluster_ca_certificate
+k8s_token          = ""  # Получить через yc config или внешний источник
+
 # Passwords (CHANGE THESE!)
 postgres_password = "CHANGE_ME_STRONG_PASSWORD_123"

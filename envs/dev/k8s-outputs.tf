@@ -34,3 +34,13 @@ output "postgres_pvc_name" {
   description = "PostgreSQL PVC name"
   value       = module.monitoring.postgres_pvc_name
 }
+
+output "ingress_namespace" {
+  description = "Ingress namespace (k8s-resources)"
+  value       = var.ingress_namespace
+}
+
+output "ingress_lb_service" {
+  description = "Ingress LoadBalancer service name"
+  value       = "ingress-nginx-controller"
+}

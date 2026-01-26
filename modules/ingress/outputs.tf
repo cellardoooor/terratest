@@ -14,7 +14,7 @@ output "lb_id" {
 
 output "ingress_namespace" {
   description = "Kubernetes namespace for Ingress Controller"
-  value       = kubernetes_namespace.ingress.metadata[0].name
+  value       = var.ingress_namespace
 }
 
 output "ingress_service_name" {

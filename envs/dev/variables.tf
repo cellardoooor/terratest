@@ -112,6 +112,14 @@ variable "postgres_password" {
   sensitive   = true
   default     = "zabbix123"
 }
+
+# Ingress variables (для k8s-resources.tf)
+variable "public_subnet_id" {
+  description = "Public subnet ID (from network module)"
+  type        = string
+  default     = ""
+}
+
 # Kubernetes provider variables (для k8s-resources.tf)
 variable "k8s_endpoint" {
   description = "Kubernetes cluster endpoint (from cluster module output)"

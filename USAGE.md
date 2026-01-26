@@ -77,6 +77,7 @@ terraform apply
 - `lb_ip` - IP Load Balancer
 - `cluster_endpoint` - Endpoint кластера (sensitive)
 - `cluster_ca_certificate` - CA сертификат (sensitive)
+- `public_subnet_id` - ID публичной подсети
 
 ## 5. Настройка kubectl (для Yandex Managed K8s)
 
@@ -96,20 +97,41 @@ yc managed-kubernetes cluster get-credentials <cluster-id> \
 
 ## 6. Развертывание Kubernetes Resources (Фаза 2)
 
-### 6.1 Подготовка переменных для k8s-resources.tf
-Создайте файл `k8s.tfvars`:
-```hcl
-k8s_endpoint = "<cluster_endpoint>"
-k8s_ca_certificate = "<ca_certificate>"
-k8s_token = "<token>" # или используйте yc config
+### 6.1 Получение данных кластера
+После terraform apply вы получите outputs:
+```bash
+# Сохраните переменные для второго apply
+export PUBLIC_SUBNET_ID=$(terraform output -raw public_subnet_id)
+export CLUSTER_ENDPOINT=$(terraform output -raw cluster_endpoint)
+export CLUSTER_CA=$(terraform output -raw cluster_ca_certificate)
+
+# Получите токен (если нужно)
+# Для Yandex Managed K8s используйте:
+# yc managed-kubernetes cluster get-credentials <cluster-id>
 ```
 
-### 6.2 Применение Kubernetes ресурсов
+### 6.2 Подготовка переменных для k8s-resources.tf
+Создайте файл `k8s.tfvars` или используйте переменные окружения:
+```hcl
+public_subnet_id   = "subnet-..."
+k8s_endpoint       = "https://..."
+k8s_ca_certificate = "..."
+k8s_token          = "..." # или используйте yc config
+```
+
+### 6.3 Применение Kubernetes ресурсов
 ```bash
-terraform apply -var-file="k8s.tfvars" k8s-resources.tf
+terraform apply \
+  -var="public_subnet_id=$PUBLIC_SUBNET_ID" \
+  -var="k8s_endpoint=$CLUSTER_ENDPOINT" \
+  -var="k8s_ca_certificate=$CLUSTER_CA" \
+  -var-file="k8s.tfvars" \
+  k8s-resources.tf
 ```
 
 Это создаст:
+- Namespace `ingress-nginx`
+- Service для Ingress Controller (LoadBalancer)
 - StorageClass `yandex-network-ssd`
 - Namespace `monitoring` и `zabbix`
 - PVC для Prometheus, Loki, Grafana, PostgreSQL

@@ -53,8 +53,3 @@ output "lb_ip" {
   description = "Load Balancer external IP"
   value       = module.ingress.lb_ip
 }
-
-output "ingress_namespace" {
-  description = "Ingress namespace"
-  value       = module.ingress.ingress_namespace
-}
