@@ -1,0 +1,38 @@
+# Terraform
+**/.terraform/
+**/.terraform.lock.hcl
+**/terraform.tfstate
+**/terraform.tfstate.backup
+**/.terraform.tfstate.lock.info
+
+# Sensitive files
+*.key
+*.pem
+*.ppk
+*.p12
+*.pfx
+
+# Environment variables
+# Игнорируем .tfvars файлы для безопасности
+# Чтобы добавить dev пример: git add -f envs/dev/terraform.tfvars
+*.tfvars
+*.tfvars.json
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swp
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Real terraform.tfvars (uncomment when ready)
+# envs/dev/terraform.tfvars

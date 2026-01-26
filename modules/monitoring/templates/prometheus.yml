@@ -1,0 +1,82 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - "rules.yml"
+
+scrape_configs:
+  # Kubernetes nodes
+  - job_name: 'kubernetes-nodes'
+    scheme: https
+    tls_config:
+      ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+    bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+    kubernetes_sd_configs:
+      - role: node
+    relabel_configs:
+      - action: labelmap
+        regex: __meta_kubernetes_node_label_(.+)
+
+  # Kubernetes endpoints
+  - job_name: 'kubernetes-endpoints'
+    scheme: https
+    tls_config:
+      ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+    bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+    kubernetes_sd_configs:
+      - role: endpoints
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_scrape]
+        action: keep
+        regex: true
+
+  # Kubernetes services
+  - job_name: 'kubernetes-services'
+    scheme: https
+    tls_config:
+      ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+    bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+    kubernetes_sd_configs:
+      - role: service
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_scrape]
+        action: keep
+        regex: true
+
+  # Ingresses
+  - job_name: 'kubernetes-ingresses'
+    scheme: https
+    tls_config:
+      ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+    bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+    kubernetes_sd_configs:
+      - role: ingress
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_ingress_annotation_prometheus_io_scrape]
+        action: keep
+        regex: true
+      - source_labels: [__meta_kubernetes_ingress_protocol]
+        action: replace
+        target_label: __address__
+        replacement: $1
+      - source_labels: [__meta_kubernetes_ingress_path]
+        action: replace
+        target_label: __metrics_path__
+        regex: (.*)
+        replacement: $1
+
+  # Node exporter (если развернут)
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+
+  # Zabbix server metrics
+  - job_name: 'zabbix'
+    static_configs:
+      - targets: ['zabbix-server-metrics:10052']
+
+  # Ingress controller metrics
+  - job_name: 'ingress-nginx'
+    static_configs:
+      - targets: ['ingress-nginx-controller-metrics:10254']

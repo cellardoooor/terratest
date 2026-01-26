@@ -1,0 +1,23 @@
+# Yandex Cloud credentials
+zone              = "ru-central1-a"
+cloud_id          = "YOUR_CLOUD_ID"
+folder_id         = "YOUR_FOLDER_ID"
+sa_key_path       = "/path/to/service-account-key.json"
+service_account_id = "YOUR_SERVICE_ACCOUNT_ID"
+
+# SSH
+ssh_public_key_path = "/path/to/your-ssh-public-key.pub"
+ssh_user            = "ubuntu"
+
+# Network
+public_subnet_cidr  = "10.0.1.0/24"
+private_subnet_cidr = "10.0.2.0/24"
+
+# Kubernetes
+k8s_version        = "1.28"
+worker_count       = 3
+worker_cores       = 4
+worker_memory      = 16
+
+# Passwords (CHANGE THESE!)
+postgres_password = "CHANGE_ME_STRONG_PASSWORD_123"
