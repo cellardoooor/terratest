@@ -1,3 +1,12 @@
+terraform {
+  required_providers {
+    yandex = {
+      source  = "yandex-cloud/yandex"
+      version = "~> 0.177.0"
+    }
+  }
+}
+
 # Security Group для Load Balancer
 resource "yandex_vpc_security_group" "load_balancer" {
   name        = "${var.network_name}-lb-sg"

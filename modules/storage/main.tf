@@ -1,3 +1,12 @@
+terraform {
+  required_providers {
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = "~> 2.23"
+    }
+  }
+}
+
 # StorageClass для Yandex Disk (Network SSD)
 resource "kubernetes_storage_class_v1" "this" {
   metadata {
@@ -6,25 +15,25 @@ resource "kubernetes_storage_class_v1" "this" {
       "storageclass.kubernetes.io/is-default-class" = "true"
     }
   }
-  
+
   # Yandex Cloud CSI driver provisioner
-  provisioner = "yandex.csi.flant.com"
-  
+  storage_provisioner = "yandex.csi.flant.com"
+
   # Parameters
   parameters = {
     type = "network-ssd"
     fsType = "ext4"
   }
-  
+
   # Volume expansion support
   allow_volume_expansion = true
-  
+
   # Reclaim policy - keep volumes
   reclaim_policy = "Retain"
-  
+
   # Volume binding mode
   volume_binding_mode = "WaitForFirstConsumer"
-  
+
   # Mount options
   mount_options = ["discard"]
 }

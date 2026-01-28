@@ -1,4 +1,13 @@
 # External Load Balancer для Ingress Controller
+terraform {
+  required_providers {
+    yandex = {
+      source  = "yandex-cloud/yandex"
+      version = "~> 0.177.0"
+    }
+  }
+}
+
 resource "yandex_lb_network_load_balancer" "ingress" {
   name = "${var.network_name}-ingress-lb"
 

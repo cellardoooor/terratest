@@ -1,3 +1,12 @@
+terraform {
+  required_providers {
+    yandex = {
+      source  = "yandex-cloud/yandex"
+      version = "~> 0.177.0"
+    }
+  }
+}
+
 resource "yandex_vpc_network" "this" {
   name = var.network_name
 }

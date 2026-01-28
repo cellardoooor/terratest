@@ -1,3 +1,20 @@
+terraform {
+  required_providers {
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = "~> 2.23"
+    }
+    helm = {
+      source  = "hashicorp/helm"
+      version = "~> 2.12"
+    }
+    yandex = {
+      source  = "yandex-cloud/yandex"
+      version = "~> 0.177.0"
+    }
+  }
+}
+
 # Namespace для мониторинга
 resource "kubernetes_namespace" "monitoring" {
   metadata {
@@ -193,8 +210,8 @@ resource "kubernetes_secret_v1" "zabbix_secret" {
   type = "Opaque"
 
   data = {
-    zabbix-admin-user     = base64encode("Admin")
-    zabbix-admin-password = base64encode("zabbix")  # Пример, лучше использовать из переменных
+    zabbix-admin-user     = base64encode(var.zabbix_admin_user)
+    zabbix-admin-password = base64encode(var.zabbix_admin_password)
   }
 }
 

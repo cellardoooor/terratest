@@ -20,5 +20,17 @@ variable "postgres_password" {
   description = "PostgreSQL admin password for Zabbix"
   type        = string
   sensitive   = true
-  default     = "zabbix123"
+}
+
+variable "zabbix_admin_user" {
+  description = "Zabbix admin username"
+  type        = string
+  sensitive   = false
+  default     = "Admin"
+}
+
+variable "zabbix_admin_password" {
+  description = "Zabbix admin password"
+  type        = string
+  sensitive   = true
 }

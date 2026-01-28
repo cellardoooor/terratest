@@ -1,3 +1,12 @@
+terraform {
+  required_providers {
+    yandex = {
+      source  = "yandex-cloud/yandex"
+      version = "~> 0.177.0"
+    }
+  }
+}
+
 # Создание Kubernetes кластера
 resource "yandex_kubernetes_cluster" "this" {
   name = "${var.cluster_name}-k8s"
@@ -8,21 +17,13 @@ resource "yandex_kubernetes_cluster" "this" {
   master {
     version = var.k8s_version
     public_ip = false
-
-    # Zone для master
-    zone = var.zone
-    
     # Security group для master
     security_group_ids = var.master_security_group_ids
-    
-    # Internal load balancer для API
-    internal_load_balancer {
-      subnet_ids = [var.private_subnet_id]
-    }
   }
 
   # Service account для кластера
   service_account_id = var.service_account_id
+  node_service_account_id = var.service_account_id
 
   # Node group будет создан отдельно
   
@@ -34,6 +35,7 @@ resource "yandex_kubernetes_node_group" "workers" {
   name    = "worker-nodes"
   version = var.k8s_version
   cluster_id = yandex_kubernetes_cluster.this.id
+  
 
   # Спецификация нод
   instance_template {
@@ -78,9 +80,5 @@ resource "yandex_kubernetes_node_group" "workers" {
     }
   }
 
-  # Механизм обновления
-  upgrade_policy {
-    max_expansion   = 1
-    max_unavailable = 0
-  }
+  # upgrade_policy removed to match provider schema
 }

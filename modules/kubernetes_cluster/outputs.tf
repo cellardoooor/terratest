@@ -15,11 +15,6 @@ output "cluster_ca_certificate" {
   sensitive   = true
 }
 
-output "cluster_token" {
-  description = "Token for Kubernetes authentication"
-  value       = yandex_kubernetes_cluster.this.master[0].internal_v4_endpoint
-  sensitive   = true
-}
 
 output "node_group_id" {
   description = "ID of the worker node group"
