@@ -47,3 +47,31 @@ module "ingress" {
   public_subnet_cidr = var.public_subnet_cidr
   ingress_namespace  = var.ingress_namespace
 }
+
+# Провайдеры для Kubernetes
+provider "kubernetes" {
+  host                   = module.kubernetes_cluster.cluster_endpoint
+  cluster_ca_certificate = module.kubernetes_cluster.cluster_ca_certificate
+  token                  = var.k8s_token
+}
+
+provider "helm" {
+  kubernetes {
+    host                   = module.kubernetes_cluster.cluster_endpoint
+    cluster_ca_certificate = module.kubernetes_cluster.cluster_ca_certificate
+    token                  = var.k8s_token
+  }
+}
+
+# Модуль Monitoring
+module "monitoring" {
+  source = "../../modules/monitoring"
+
+  depends_on = [module.kubernetes_cluster]
+
+  zabbix_namespace      = var.zabbix_namespace
+  zabbix_admin_user     = var.zabbix_admin_user
+  zabbix_admin_password = var.zabbix_admin_password
+  postgres_password     = var.postgres_password
+  storage_class_name    = "yandex-network-ssd"
+}

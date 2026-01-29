@@ -113,6 +113,19 @@ variable "postgres_password" {
   default     = "zabbix123"
 }
 
+variable "zabbix_admin_user" {
+  description = "Zabbix admin username"
+  type        = string
+  default     = "Admin"
+}
+
+variable "zabbix_admin_password" {
+  description = "Zabbix admin password"
+  type        = string
+  sensitive   = true
+  default     = "zabbix"
+}
+
 # Ingress variables (для k8s-resources.tf)
 variable "public_subnet_id" {
   description = "Public subnet ID (from network module)"
