@@ -41,9 +41,8 @@ module "kubernetes_cluster" {
 module "ingress" {
   source = "../../modules/ingress"
 
-  network_name       = var.network_name
-  public_subnet_id   = module.network.public_subnet_id
-  node_group_id      = module.kubernetes_cluster.node_group_id
+  network_name      = var.network_name
+  instance_group_id = module.kubernetes_cluster.instance_group_id
 }
 
 # Модуль Monitoring
