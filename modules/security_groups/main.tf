@@ -38,6 +38,51 @@ resource "yandex_vpc_security_group" "load_balancer" {
   }
 }
 
+# Security Group для Kubernetes Master (Control Plane)
+resource "yandex_vpc_security_group" "k8s_master" {
+  name        = "${var.network_name}-k8s-master-sg"
+  description = "Security group for Kubernetes master control plane"
+  network_id  = var.network_id
+
+  # Входящий трафик от worker nodes (kubelet API)
+  ingress {
+    protocol       = "TCP"
+    description    = "Kubelet API from nodes"
+    v4_cidr_blocks = [var.private_subnet_cidr]
+    port           = 10250
+  }
+
+  # Входящий трафик между master нодами (etcd)
+  ingress {
+    protocol       = "TCP"
+    description    = "etcd between masters"
+    v4_cidr_blocks = ["10.0.0.0/8"]
+    port           = 2379
+  }
+
+  ingress {
+    protocol       = "TCP"
+    description    = "etcd peer between masters"
+    v4_cidr_blocks = ["10.0.0.0/8"]
+    port           = 2380
+  }
+
+  # Входящий трафик от worker nodes (внутриклластеровое взаимодействие)
+  ingress {
+    protocol       = "TCP"
+    description    = "Worker to Master internal traffic"
+    v4_cidr_blocks = [var.private_subnet_cidr]
+    port           = 6443
+  }
+
+  # Исходящий трафик в worker nodes и интернет
+  egress {
+    protocol       = "ANY"
+    description    = "Outbound traffic"
+    v4_cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
 # Security Group для Kubernetes nodes
 resource "yandex_vpc_security_group" "k8s_nodes" {
   name        = "${var.network_name}-k8s-nodes-sg"

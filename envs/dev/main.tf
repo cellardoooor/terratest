@@ -31,7 +31,7 @@ module "kubernetes_cluster" {
   worker_cores              = var.worker_cores
   worker_memory             = var.worker_memory
   service_account_id        = var.service_account_id
-  master_security_group_ids = []
+  master_security_group_ids = [module.security_groups.k8s_master_sg_id]
   node_security_group_ids   = [module.security_groups.k8s_nodes_sg_id]
   ssh_public_key_path       = var.ssh_public_key_path
   ssh_user                  = var.ssh_user
