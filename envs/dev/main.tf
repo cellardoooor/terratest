@@ -43,24 +43,7 @@ module "ingress" {
 
   network_name       = var.network_name
   public_subnet_id   = module.network.public_subnet_id
-  private_subnet_id  = module.network.private_subnet_id
-  public_subnet_cidr = var.public_subnet_cidr
-  ingress_namespace  = var.ingress_namespace
-}
-
-# Провайдеры для Kubernetes
-provider "kubernetes" {
-  host                   = module.kubernetes_cluster.cluster_endpoint
-  cluster_ca_certificate = module.kubernetes_cluster.cluster_ca_certificate
-  token                  = var.k8s_token
-}
-
-provider "helm" {
-  kubernetes {
-    host                   = module.kubernetes_cluster.cluster_endpoint
-    cluster_ca_certificate = module.kubernetes_cluster.cluster_ca_certificate
-    token                  = var.k8s_token
-  }
+  node_group_id      = module.kubernetes_cluster.node_group_id
 }
 
 # Модуль Monitoring
