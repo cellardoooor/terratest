@@ -54,11 +54,6 @@ resource "yandex_lb_network_load_balancer" "ingress" {
 resource "yandex_lb_target_group" "ingress" {
   name = "${var.network_name}-ingress-targets"
 
-  # Для Yandex Managed K8s, LoadBalancer Service автоматически добавляет ноды
-  # в целевую группу через cloud controller manager
-  # Эта target group будет заполнена динамически
-  target {
-    subnet_id = var.private_subnet_id
-    address   = "0.0.0.0"  # Placeholder, заполняется автоматически
-  }
+  # Target group will be populated dynamically by Yandex Cloud controller
+  # when LoadBalancer Service is created in Kubernetes
 }

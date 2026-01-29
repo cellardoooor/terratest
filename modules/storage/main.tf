@@ -1,55 +1,24 @@
-terraform {
-  required_providers {
-    kubernetes = {
-      source  = "hashicorp/kubernetes"
-      version = "~> 2.23"
-    }
-  }
-}
-
-# StorageClass для Yandex Disk (Network SSD)
-resource "kubernetes_storage_class_v1" "this" {
-  metadata {
-    name = "yandex-network-ssd"
-    annotations = {
-      "storageclass.kubernetes.io/is-default-class" = "true"
-    }
-  }
-
-  # Yandex Cloud CSI driver provisioner
-  storage_provisioner = "yandex.csi.flant.com"
-
-  # Parameters
-  parameters = {
-    type = "network-ssd"
-    fsType = "ext4"
-  }
-
-  # Volume expansion support
-  allow_volume_expansion = true
-
-  # Reclaim policy - keep volumes
-  reclaim_policy = "Retain"
-
-  # Volume binding mode
-  volume_binding_mode = "WaitForFirstConsumer"
-
-  # Mount options
-  mount_options = ["discard"]
-}
-
-# ConfigMap для StorageClass дополнительных параметров (опционально)
-resource "kubernetes_config_map_v1" "storage_config" {
-  metadata {
-    name      = "storage-class-config"
-    namespace = "kube-system"
-  }
-  
-  data = {
-    "default-parameters" = jsonencode({
-      type      = "network-ssd"
-      fsType    = "ext4"
-      zone      = var.zone
-    })
-  }
-}
+# Note: Storage resources (StorageClass, ConfigMaps) are created via deploy-k8s.sh script
+# using kubectl and Kubernetes manifests to avoid dependency on kubernetes provider.
+# 
+# This allows the storage configuration to be applied directly to the cluster
+# without requiring Terraform's kubernetes provider to be configured.
+#
+# StorageClass manifest (applied via deploy-k8s.sh):
+# 
+# apiVersion: storage.k8s.io/v1
+# kind: StorageClass
+# metadata:
+#   name: yandex-network-ssd
+#   annotations:
+#     storageclass.kubernetes.io/is-default-class: "true"
+# provisioner: yandex.csi.flant.com
+# parameters:
+#   type: network-ssd
+#   fsType: ext4
+#   zone: ru-central1-a
+# allowVolumeExpansion: true
+# reclaimPolicy: Retain
+# volumeBindingMode: WaitForFirstConsumer
+# mountOptions:
+#   - discard
