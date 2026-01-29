@@ -1,114 +1,109 @@
 # Quick Start
 
-## Быстрое развертывание за 5 шагов
+## Быстрое развертывание за 3 этапа
 
-### Шаг 1: Подготовка
+### Этап 1: Инфраструктура (Terraform)
 ```bash
-# Клонируем
-cd ~/projects
-git clone <repo> platform-engineering
-cd platform-engineering
+# Инициализация
+bash scripts/init.sh
 
-# Настраиваем переменные
-cp envs/dev/terraform.tfvars.example envs/dev/terraform.tfvars
-# Редактируем terraform.tfvars
-```
-
-### Шаг 2: Infrastructure
-```bash
+# Развертывание
 cd envs/dev
-terraform init
 terraform plan
-terraform apply -auto-approve
+terraform apply
 ```
 
-### Шаг 3: Получаем данные
+### Этап 2: Получение данных кластера
 ```bash
-# Сохраняем переменные
-LB_IP=$(terraform output -raw lb_ip)
-ENDPOINT=$(terraform output -raw cluster_endpoint)
-CA_CERT=$(terraform output -raw cluster_ca_certificate)
+# Сохраняем данные для следующего шага
+CLUSTER_ID=$(terraform output -raw cluster_id)
+PUBLIC_SUBNET_ID=$(terraform output -raw public_subnet_id)
 
-# Экспортируем для следующего шага
-export TF_VAR_k8s_endpoint="$ENDPOINT"
-export TF_VAR_k8s_ca_certificate="$CA_CERT"
+echo "Cluster ID: $CLUSTER_ID"
+echo "Public Subnet ID: $PUBLIC_SUBNET_ID"
 ```
 
-### Шаг 4: Kubernetes Resources
+### Этап 3: Развертывание компонентов в кластер
 ```bash
-# Применяем k8s-resources
-terraform apply -var="k8s_endpoint=$ENDPOINT" -var="k8s_ca_certificate=$CA_CERT" k8s-resources.tf -auto-approve
-```
-
-### Шаг 5: Deploy Services (Helm)
-```bash
-# Подключаемся к кластеру
-yc managed-kubernetes cluster get-credentials <cluster-id> --external
-
-# Устанавливаем базовые сервисы
-helm repo add grafana https://grafana.github.io/helm-charts
-helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-helm repo update
-
-# Простая проверка
-kubectl get nodes
-```
-
-## Минимальная конфигурация
-
-### Если нужны только базовые ресурсы (сеть + кластер)
-
-```bash
-terraform apply -auto-approve  # Только infrastructure
-# Остановитесь на этом, если нужно развернуть сервисы вручную
-```
-
-### Если нужны все ресурсы
-
-Установите через Helm основные сервисы:
-```bash
-# Prometheus + Grafana
-helm install monitoring prometheus-community/kube-prometheus-stack \
-  --namespace monitoring --create-namespace
-
-# Loki (logs)
-helm install loki grafana/loki-stack \
-  --namespace monitoring
-
-# Ingress NGINX
-helm install ingress ingress-nginx/ingress-nginx \
-  --namespace ingress-nginx --create-namespace \
-  --set controller.service.type=LoadBalancer
+# Из корня проекта
+bash scripts/deploy-k8s.sh "$CLUSTER_ID" monitoring zabbix "your_postgres_password" ingress-nginx "$PUBLIC_SUBNET_ID"
 ```
 
 ## Проверка
 
 ```bash
-# Проверить сеть
-terraform output vpc_id
-terraform output lb_ip
+# Подключиться к кластеру
+yc managed-kubernetes cluster get-credentials "$CLUSTER_ID" --external
 
-# Проверить кластер
-terraform output cluster_endpoint
+# Проверить namespaces
+kubectl get ns
+
+# Проверить Kubernetes nodes
 kubectl get nodes
-
-# Проверить ресурсы
-terraform state list
-terraform state show module.network.yandex_vpc_network.this
 ```
 
-## Удаление
+## Минимальная конфигурация
+
+Если нужны только базовые ресурсы (сеть + кластер):
 
 ```bash
-# Удалить все
-terraform destroy -auto-approve
-
-# Удалить только k8s ресурсы (если нужно сохранить кластер)
-terraform destroy -auto-approve -var="k8s_endpoint=$ENDPOINT" k8s-resources.tf
+bash scripts/init.sh
+cd envs/dev
+terraform apply
+# Стоп - остальное позже!
 ```
 
-## Полезные команды Yandex CLI
+## Развертывание Helm чартов
 
+Для установки дополнительных сервисов:
+
+```bash
+# Подключиться к кластеру
+yc managed-kubernetes cluster get-credentials "$CLUSTER_ID" --external
+
+# Prometheus + Grafana
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo update
+helm install prometheus prometheus-community/kube-prometheus-stack \
+  --namespace monitoring --create-namespace
+
+# NGINX Ingress Controller
+helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+helm install ingress ingress-nginx/ingress-nginx \
+  --namespace ingress-nginx --create-namespace \
+  --set controller.service.type=LoadBalancer
+```
+
+```bash
+# Удалить все инфраструктуру
+cd envs/dev
+terraform destroy -auto-approve
+
+# Удалить в-cluster ресурсы (оставить кластер)
+kubectl delete namespace monitoring zabbix ingress-nginx
+```
+
+## Полезные команды
+
+### Terraform
+```bash
+cd envs/dev
+
+# Информация о state
+terraform state list
+terraform state show module.network.yandex_vpc_network.this
+
+# Проверка конфигурации
+terraform validate
+
+# Обновление backend
+terraform init -reconfigure
+
+# Все outputs
+terraform output
+```
+
+### Yandex CLI
 ```bash
 # Список кластеров
 yc managed-kubernetes cluster list
@@ -121,15 +116,11 @@ yc vpc subnet list
 
 # Service accounts
 yc iam service-account list
-
-# Диски
-yc compute disk list
 ```
 
-## Полезные команды kubectl
-
+### Kubectl
 ```bash
-# Список namespace
+# Список namespaces
 kubectl get ns
 
 # Список подов
@@ -141,61 +132,15 @@ kubectl get svc -A
 # Список PVC
 kubectl get pvc -A
 
-# Информация о поде
-kubectl describe pod <pod-name> -n <namespace>
-
 # Логи пода
 kubectl logs -f <pod-name> -n <namespace>
 
-# Shell в под
+# Shell в pod
 kubectl exec -it <pod-name> -n <namespace> -- /bin/bash
-```
-
-## Полезные команды Terraform
-
-```bash
-# Информация о state
-terraform state list
-terraform state show <resource>
-
-# Модуль вывода
-terraform output -json
-
-# Проверка конфигурации
-terraform validate
-
-# Обновление backend (если изменился)
-terraform init -reconfigure
-```
-
-## Частые проблемы
-
-### Проблема: "Service account has no permission"
-**Решение**: Добавьте роли service account в Yandex Cloud
-
-### Проблема: "Quota exceeded"
-**Решение**: Увеличьте квоты или уменьшите размеры дисков/нод
-
-### Проблема: "Cluster not ready"
-**Решение**: Подождите 5-10 минут, кластер создается не мгновенно
-
-### Проблема: "Kubernetes provider not configured"
-**Решение**: Вы используете k8s-resources.tf без данных кластера
-
-## Окружение
-
-```bash
-# Для разработки
-export TF_VAR_sa_key_path="$HOME/.secrets/yandex/key.json"
-export TF_VAR_ssh_public_key_path="$HOME/.ssh/id_platform.pub"
-
-# Для CI/CD
-# Используйте vault или github secrets
 ```
 
 ## Документация
 
-См. также:
-- `USAGE.md` - полная инструкция
-- `README.md` - общая документация
-- `modules/*/README.md` - документация модулей (если создана)
+- `README.md` - полная информация об архитектуре
+- `USAGE.md` - детальная инструкция
+- `modules/*/` - документация модулей

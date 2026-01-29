@@ -32,23 +32,27 @@ Internet
 
 ```
 ter/
-├── versions.tf          # Версии Terraform и провайдеров
-├── providers.tf         # Конфигурация провайдера Yandex
-├── backend.tf           # Конфигурация state storage (S3)
 ├── modules/             # Terraform модули
-│   ├── network/         # VPC, Public/Private subnets
-│   ├── security_groups/ # Security Groups (LB, K8s nodes)
+│   ├── network/         # VPC, NAT Gateway, Public/Private subnets
+│   ├── security_groups/ # Security Groups (LB, K8s master/nodes)
 │   ├── kubernetes_cluster/ # Managed K8s cluster + node group
-│   ├── storage/         # StorageClass для Persistent Volumes
-│   ├── ingress/         # Load Balancer + Ingress Controller
-│   └── monitoring/      # Namespace, PVC, ConfigMaps
+│   ├── ingress/         # Load Balancer для Ingress Controller
+│   └── storage/         # StorageClass документация (создается через deploy-k8s.sh)
 │
 ├── envs/
 │   └── dev/             # Dev окружение
+│       ├── versions.tf  # Версии Terraform и провайдеров
+│       ├── providers.tf # Конфигурация провайдера Yandex
+│       ├── backend.tf   # Конфигурация state storage (S3)
 │       ├── main.tf      # Основной конфиг
 │       ├── variables.tf # Переменные
 │       ├── outputs.tf   # Выводы
 │       └── terraform.tfvars # Значения переменных
+│
+├── scripts/
+│   ├── init.sh          # Инициализация проекта
+│   ├── deploy-k8s.sh    # Развертывание компонентов в кластер
+│   └── set-creds.sh     # Установка credentials
 ```
 
 ## Компоненты
@@ -85,37 +89,19 @@ ter/
 
 ### Модуль Ingress
 - **Load Balancer**: Network Load Balancer (HTTP/HTTPS)
-- **Ingress Controller**: NGINX (через Helm - в будущем)
-- **Namespace**: `ingress-nginx`
+- **Target Group**: для Ingress Controller (заполняется динамически)
+- Поддерживает интеграцию с NGINX Ingress Controller через Helm
 
-### Модуль Monitoring
-- **Namespace**: `monitoring`
-- **Namespace**: `zabbix`
-- **PVC**:
-  - Prometheus: 20Gi
-  - Loki: 10Gi
-  - Grafana: 5Gi
-  - PostgreSQL: 10Gi
-  - Zabbix: 5Gi
-- **ConfigMaps**:
-  - Prometheus config
-  - Loki config
-  - Grafana datasources/dashboards
-  - PostgreSQL config
-- **Secrets**:
-  - PostgreSQL password
-  - Zabbix admin credentials
+## In-Cluster Services
 
-## Services (Kubernetes manifests)
-
-Через Helm charts (не включены в этот репозиторий):
+Все in-cluster сервисы развертываются через скрипт `scripts/deploy-k8s.sh` и Helm charts:
+- **NGINX Ingress Controller** (ingress-nginx)
 - **PostgreSQL** (для Zabbix)
 - **Zabbix** (server + web + proxy)
 - **Prometheus** (server + alertmanager)
 - **Grafana** (with datasource provisioning)
 - **Loki** (log aggregation)
-- **NGINX Ingress Controller** (через Helm)
-- **Node Exporter** (опционально)
+- **StorageClass** (yandex-network-ssd)
 
 ## Как развернуть
 
@@ -126,55 +112,64 @@ git clone <repo>
 cd ter
 
 # Настроить переменные в envs/dev/terraform.tfvars
-# Особое внимание: postgres_password, service_account_id, ssh keys
+# Важные переменные:
+# - sa_key_path: путь к JSON ключу Service Account
+# - cloud_id, folder_id: ID вашего облака и папки
+# - ssh_public_key_path: путь к публичному SSH ключу
+# - service_account_id: ID Service Account для кластера
 ```
 
-### 2. Инициализация Terraform
+### 2. Инициализация проекта
+```bash
+bash scripts/init.sh
+# Скрипт создаст terraform.tfvars и выполнит terraform init
+```
+
+### 3. Развертывание инфраструктуры
 ```bash
 cd envs/dev
-terraform init
-```
-
-### 3. Планирование
-```bash
 terraform plan
-```
-
-### 4. Применение
-```bash
 terraform apply
 ```
 
-### 5. Настройка kubectl (после развертывания)
+### 4. Получение данных кластера
 ```bash
-# Получить данные кластера
-terraform output -raw cluster_endpoint
-terraform output -raw cluster_ca_certificate
-
-# Настроить kubectl через Yandex CLI или через полученные данные
-# (специфично для Yandex Managed K8s)
+# Сохраняем ID кластера для следующего шага
+CLUSTER_ID=$(terraform output -raw cluster_id)
+echo "Cluster ID: $CLUSTER_ID"
 ```
 
-### 6. Развертывание Helm-чартов
+### 5. Развертывание компонентов в кластер
 ```bash
-# Подключиться к кластеру
-# Установить helm-чарты для:
-# - ingress-nginx
-# - prometheus-stack
-# - loki-stack
-# - postgresql (для zabbix)
-# - zabbix
+# Из корня репозитория
+bash scripts/deploy-k8s.sh "$CLUSTER_ID" monitoring zabbix "your_postgres_password" ingress-nginx "<public_subnet_id>"
+```
+
+### 6. Проверка
+```bash
+# Получить данные для подключения к кластеру
+yc managed-kubernetes cluster get-credentials "$CLUSTER_ID" --external
+
+# Проверить namespaces
+kubectl get ns
+
+# Установить Helm чарты для сервисов (если требуется)
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm install prometheus prometheus-community/kube-prometheus-stack -n monitoring --create-namespace
 ```
 
 ## Outputs (после terraform apply)
 
 ```bash
-# Основные параметры
-terraform output lb_ip                    # IP Load Balancer
-terraform output cluster_endpoint         # Endpoint кластера
-terraform output storage_class_name       # Имя StorageClass
+cd envs/dev
 
-# Покажет все outputs
+# Основные параметры
+terraform output -raw cluster_id          # ID кластера
+terraform output -raw lb_ip               # IP Load Balancer
+terraform output -raw cluster_endpoint    # Endpoint кластера API
+terraform output -raw cluster_ca_certificate # CA сертификат
+
+# Все outputs
 terraform output
 ```
 

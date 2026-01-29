@@ -41,19 +41,9 @@ module "kubernetes_cluster" {
 module "ingress" {
   source = "../../modules/ingress"
 
-  network_name      = var.network_name
-  instance_group_id = module.kubernetes_cluster.instance_group_id
-}
-
-# Модуль Monitoring
-module "monitoring" {
-  source = "../../modules/monitoring"
-
-  depends_on = [module.kubernetes_cluster]
-
-  zabbix_namespace      = var.zabbix_namespace
-  zabbix_admin_user     = var.zabbix_admin_user
-  zabbix_admin_password = var.zabbix_admin_password
-  postgres_password     = var.postgres_password
-  storage_class_name    = "yandex-network-ssd"
+  network_name       = var.network_name
+  public_subnet_id   = module.network.public_subnet_id
+  private_subnet_id  = module.network.private_subnet_id
+  public_subnet_cidr = var.public_subnet_cidr
+  ingress_namespace  = var.ingress_namespace
 }
