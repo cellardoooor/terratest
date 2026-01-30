@@ -31,19 +31,16 @@ Internet
 ## Структура проекта
 
 ```
-ter/
 ├── modules/             # Terraform модули
 │   ├── network/         # VPC, NAT Gateway, Public/Private subnets
 │   ├── security_groups/ # Security Groups (LB, K8s master/nodes)
 │   ├── kubernetes_cluster/ # Managed K8s cluster + node group
-│   ├── ingress/         # Load Balancer для Ingress Controller
-│   └── storage/         # StorageClass документация (создается через deploy-k8s.sh)
+│   └── ingress/         # Load Balancer для Ingress Controller
 │
 ├── envs/
 │   └── dev/             # Dev окружение
 │       ├── versions.tf  # Версии Terraform и провайдеров
 │       ├── providers.tf # Конфигурация провайдера Yandex
-│       ├── backend.tf   # Конфигурация state storage (S3)
 │       ├── main.tf      # Основной конфиг
 │       ├── variables.tf # Переменные
 │       ├── outputs.tf   # Выводы
@@ -53,6 +50,11 @@ ter/
 │   ├── init.sh          # Инициализация проекта
 │   ├── deploy-k8s.sh    # Развертывание компонентов в кластер
 │   └── set-creds.sh     # Установка credentials
+│
+├── .gitignore.example   # Пример .gitignore
+├── README.md            # Общая информация
+├── QUICKSTART.md        # Быстрый старт
+└── USAGE.md             # Полная инструкция
 ```
 
 ## Компоненты
@@ -73,19 +75,15 @@ ter/
 
 ### Модуль Kubernetes Cluster
 - **Тип**: Managed Kubernetes (Yandex Managed Service for Kubernetes)
+- **Master Nodes**: 
+  - Не имеют public IP (`public_ip = false`)
+  - Доступ к API только изнутри VPC или через Yandex Cloud Console
 - **Node Group**: `worker-nodes`
   - 3 ноды
   - 4 CPU, 16 GB RAM
   - Network SSD 64 GB
   - Private subnet (без публичного IP)
   - SSH по ключу
-
-### Модуль Storage
-- **StorageClass**: `yandex-network-ssd`
-  - Provisioner: `yandex.csi.flant.com`
-  - Type: `network-ssd`
-  - Allow volume expansion: true
-  - Reclaim policy: Retain
 
 ### Модуль Ingress
 - **Load Balancer**: Network Load Balancer (HTTP/HTTPS)
@@ -94,14 +92,16 @@ ter/
 
 ## In-Cluster Services
 
-Все in-cluster сервисы развертываются через скрипт `scripts/deploy-k8s.sh` и Helm charts:
-- **NGINX Ingress Controller** (ingress-nginx)
-- **PostgreSQL** (для Zabbix)
-- **Zabbix** (server + web + proxy)
-- **Prometheus** (server + alertmanager)
-- **Grafana** (with datasource provisioning)
-- **Loki** (log aggregation)
-- **StorageClass** (yandex-network-ssd)
+⚠️ **Важно**: In-cluster сервисы НЕ создаются Terraform автоматически. Они разворачиваются отдельно через скрипт `scripts/deploy-k8s.sh` или вручную через Helm.
+
+Сервисы для развертывания:
+- **NGINX Ingress Controller** (ingress-nginx) - автоматически через deploy-k8s.sh
+- **PostgreSQL** (для Zabbix) - вручную или через deploy-k8s.sh
+- **Zabbix** (server + web + proxy) - вручную или через deploy-k8s.sh
+- **Prometheus** (server + alertmanager) - вручную или через Helm
+- **Grafana** (with datasource provisioning) - вручную или через Helm
+- **Loki** (log aggregation) - вручную или через Helm
+- **StorageClass** (yandex-network-ssd) - автоматически через deploy-k8s.sh
 
 ## Как развернуть
 
@@ -109,7 +109,7 @@ ter/
 ```bash
 # Клонировать репозиторий
 git clone <repo>
-cd ter
+cd <repo-name>
 
 # Настроить переменные в envs/dev/terraform.tfvars
 # Важные переменные:
@@ -153,9 +153,12 @@ yc managed-kubernetes cluster get-credentials "$CLUSTER_ID" --external
 # Проверить namespaces
 kubectl get ns
 
-# Установить Helm чарты для сервисов (если требуется)
+# Установить мониторинг (Prometheus + Grafana) если требуется
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 helm install prometheus prometheus-community/kube-prometheus-stack -n monitoring --create-namespace
+
+# Проверить что Ingress Controller уже установлен (через deploy-k8s.sh)
+kubectl get pods -n ingress-nginx
 ```
 
 ## Outputs (после terraform apply)

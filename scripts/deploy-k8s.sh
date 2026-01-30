@@ -18,8 +18,8 @@ echo "Fetching kubeconfig for cluster ${CLUSTER_ID}"
 yc managed-kubernetes cluster get-credentials "${CLUSTER_ID}" --external
 
 KUBECONFIG_PATH="${HOME}/.kube/config"
-if [ -z "${KUBECONFIG_PATH}" ]; then
-  echo "Failed to detect kubeconfig path" >&2
+if [ ! -f "${KUBECONFIG_PATH}" ]; then
+  echo "Kubeconfig not found at ${KUBECONFIG_PATH}" >&2
   exit 3
 fi
 
@@ -54,19 +54,6 @@ reclaimPolicy: Retain
 volumeBindingMode: WaitForFirstConsumer
 allowVolumeExpansion: true
 EOF
-
-# Apply monitoring manifests from module templates if present
-TEMPLATES_DIR="$(pwd)/../modules/monitoring/templates"
-if [ -d "${TEMPLATES_DIR}" ]; then
-  echo "Applying monitoring templates from ${TEMPLATES_DIR}"
-  # Render and apply each file (simple copy — templates should contain ready YAMLs)
-  for f in ${TEMPLATES_DIR}/*; do
-    echo "Applying $f"
-    kubectl apply -f "$f" -n ${MON_NS} || true
-  done
-else
-  echo "No monitoring templates directory found at ${TEMPLATES_DIR}"
-fi
 
 # Example: install nginx ingress controller via helm
 helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx || true

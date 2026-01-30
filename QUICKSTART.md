@@ -53,9 +53,9 @@ terraform apply
 # Стоп - остальное позже!
 ```
 
-## Развертывание Helm чартов
+## Развертывание дополнительных сервисов
 
-Для установки дополнительных сервисов:
+⚠️ **Примечание**: NGINX Ingress Controller уже установлен автоматически через `deploy-k8s.sh`. Дополнительные сервисы (Prometheus, Grafana, Zabbix и др.) нужно устанавливать вручную:
 
 ```bash
 # Подключиться к кластеру
@@ -67,11 +67,8 @@ helm repo update
 helm install prometheus prometheus-community/kube-prometheus-stack \
   --namespace monitoring --create-namespace
 
-# NGINX Ingress Controller
-helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
-helm install ingress ingress-nginx/ingress-nginx \
-  --namespace ingress-nginx --create-namespace \
-  --set controller.service.type=LoadBalancer
+# Проверить установку Ingress Controller (уже установлен)
+kubectl get pods -n ingress-nginx
 ```
 
 ```bash
